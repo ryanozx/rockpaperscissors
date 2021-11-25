@@ -1,3 +1,11 @@
+const scoreline = document.querySelector('.score');
+const resultText = document.querySelector('.progresstext');
+const buttons = document.querySelectorAll('.actions button');
+const actionBox = document.querySelector('.actions');
+
+let playerScore = 0;
+let computerScore = 0;
+
 function computerPlay() {
     let chooseComputerMove = Math.floor(Math.random() * 3);
     let computerMove;
@@ -16,68 +24,73 @@ function computerPlay() {
 }
 
 function playRound(playerSelection, computerSelection) {
+    let gameResult;
     if (playerSelection === computerSelection) {
-        return "D";
+        gameResult = "D";
     }
     else if ((playerSelection === "Paper" && computerSelection === "Rock") || 
                 (playerSelection === "Scissors" && computerSelection === "Paper") || 
                 (playerSelection === "Rock" && computerSelection === "Scissors")) {
-        return "W";
+        gameResult = "W";
     }
     else {
-        return "L";
+        gameResult = "L";
     }
+    updateScore(playerSelection, computerSelection, gameResult);
 }
 
-
-function game() {
-    let playerWins = 0, computerWins = 0;
-    for (let i = 1; i < 6; i++) {
-        let playerSelection;
-        do {
-            playerSelection = prompt("Choose move:");
-        }
-        while (!checkValidPlayerMove(playerSelection));
-        let computerSelection = computerPlay();
-        let roundResult = playRound(playerSelection, computerSelection);
-        switch(roundResult) {
-            case "W":
-                console.log("Round " + i + ": You win! " + playerSelection + " beats " + computerSelection + "!");
-                playerWins++;
-                break;
-            case "L":
-                console.log("Round " + i + ": You lose! " + computerSelection + " beats " + playerSelection + "!");
-                computerWins++;
-                break;
-            case "D":
-                console.log("Round " + i + ": It's a draw! You both chose " + computerSelection + ".");
-                break;
-        }
-        console.log("Player: " + playerWins + ", Computer: " + computerWins);
+function updateScore(playerSelection, computerSelection, result) {
+    if (result === "W") {
+        scoreline.textContent = ++playerScore + " - " + computerScore;
+        resultText.textContent = "W - " + playerSelection + " beats " + computerSelection + ".";
     }
-    announceWinner(playerWins, computerWins);
-}
-
-function checkValidPlayerMove(playerInput) {
-    return playerInput.toUpperCase() === "ROCK" || playerInput.toUpperCase() === "PAPER" || playerInput.toUpperCase() === "SCISSORS";
-}
-
-function capitalise(str) {
-    return str[0].toUpperCase() + str.slice(1).toLowerCase();
-}
-
-function announceWinner(playerScore, computerScore) {
-    let resultText;
-    if (playerScore > computerScore) {
-        resultText = "You won!";
-    }
-    else if (computerScore > playerScore) {
-        resultText = "You lost!";
+    else if (result === "L") {
+        scoreline.textContent = playerScore + " - " + ++computerScore;
+        resultText.textContent = "L - " + computerSelection + " beats " + playerSelection + ".";
     }
     else {
-        resultText = "It's a draw!";
+        resultText.textContent = "D - You both chose " + playerSelection + "."; 
     }
-    console.log(resultText + " Final score: " + playerScore + "-" + computerScore);
+    if (playerScore === 5 || computerScore === 5) {
+        if (playerScore === 5) {
+            resultText.textContent = "You won! Try again?";
+        }
+        else {
+            resultText.textContent = "You lost! Try again?";
+        }
+        endGame();
+    }
 }
 
-game();
+function capitalise(word) {
+    const splitStrArray = word.split("");
+    return splitStrArray[0].toUpperCase() + word.slice(1,);
+}
+
+function toggleButtonDisplay(mode) {
+    const moveButtons = document.getElementsByTagName('button');
+    for (let i = 0; i < moveButtons.length; i++) {
+        moveButtons[i].style.display = mode;
+    }
+}
+
+function endGame() {
+    toggleButtonDisplay('none');
+    const restart = document.createElement('button');
+    restart.textContent = "Play again!";
+    restart.style.cssText = 'border-radius: 12px; border-color: #ffffff; font-size: 30px; padding: 10px 30px;';
+    restart.addEventListener('click', function() {
+        playerScore = 0;
+        computerScore = 0;
+        scoreline.textContent = "0 - 0";
+        resultText.textContent = "Pick a move! First to five wins!";
+        actionBox.removeChild(restart);
+        toggleButtonDisplay('block');
+    })
+    actionBox.appendChild(restart);
+}
+
+buttons.forEach((button) => {
+    button.addEventListener('click', (e) => playRound(capitalise(e.target.id), computerPlay()));
+})
+
